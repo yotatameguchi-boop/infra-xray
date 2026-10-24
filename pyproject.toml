@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "infra-xray"
+version = "0.1.0"
+description = "Local, evidence-based Terraform plan explorer"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = []
+
+[project.scripts]
+infra-xray = "infra_xray.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["infra_xray*"]
+
+[tool.setuptools.package-data]
+infra_xray = ["static/*", "static/assets/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

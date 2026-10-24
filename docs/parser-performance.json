@@ -1,0 +1,9 @@
+{
+  "resources": 100,
+  "runs": 50,
+  "medianMs": 0.383,
+  "maxMs": 1.336,
+  "python": "3.9.6",
+  "system": "macOS-26.4.1-arm64-arm-64bit",
+  "machine": "arm64"
+}
