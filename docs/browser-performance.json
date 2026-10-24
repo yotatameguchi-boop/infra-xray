@@ -1,0 +1,7 @@
+{
+  "resources": 100,
+  "readyMs": 217,
+  "viewport": "1440x1050",
+  "browser": "Chromium / Playwright",
+  "note": "One local run; navigation to 100 mounted nodes, not a general performance guarantee."
+}

@@ -13,11 +13,17 @@
 
 ビルド済みwheelを新しい仮想環境にオフラインインストールし、`infra-xray --help` と `infra-xray check` を実行して成功を確認しました。wheelに現行のUIとサニタイザーが含まれることも検証済みです。
 
-## この環境で未確認の項目
+## GitHub Actionsでの追加検証
 
-Playwrightによる実ブラウザーE2Eを2件用意し実行しましたが、ChromeおよびChromium headless shellがテスト開始前にmacOSサンドボックスのMachPortRendezvous権限拒否で停止しました。UIの動作不具合による失敗とは判定していませんが、実ブラウザーの描画・操作が通過したとも主張していません。
+[初回の成功した実行](https://github.com/yotatameguchi-boop/infra-xray/actions/runs/40062527918)で、Ubuntu / Python 3.12 / Node.js 22 / Chromiumによる以下の検証が成功しました。
 
-このため、実ブラウザーの100ノード初期表示時間、スクリーンショットによる見た目の検証、デモ動画の生成は未完了です。ブラウザー起動可能な環境で以下を実行すると、E2E・スクリーンショット・動画・初期表示時間の記録を生成します。
+- Python 55件、Vitest 6件、Playwright E2E 2件。
+- 表示モード、リソース詳細、検索、診断根拠、キーボード選択、モバイル幅、再読み込み。
+- ページのJavaScript例外なし、外部へのページリクエストなし。
+- 100リソースの描画。navigationから100ノードのDOMマウントまで217 ms（単一実行の参考値）。
+- wheel / sdist / 実行用ZIPの生成と、インストール済みCLIによるsafeサンプルの解析。
+
+実画面から生成したスクリーンショットを `docs/screenshots/desktop.png` と `docs/screenshots/mobile.png` に保存しました。動画はActionsの `browser-evidence` artifactに含まれます（保持期間14日）。再実行時の測定値は当該実行のartifactを参照してください。
 
 ```bash
 cd web
@@ -29,4 +35,6 @@ npx playwright test
 
 スクリーンショットは `docs/screenshots/`、動画は `web/test-results/`、表示時間は `docs/browser-performance.json` に出力されます。必要なら `CHROMIUM_PATH` で既存のブラウザー実行ファイルを指定できます。
 
-GitHub Actionsの設定ファイルは同梱していますが、リモート上の実行はまだありません。GitHub公開、外部利用者による試用、Windows / Linux実機での検証も未実施です。
+## 未確認の項目
+
+macOSローカルのサンドボックス内ではChromiumのMachPortRendezvous権限拒否があり、実ブラウザーの検証をGitHub Actions上のLinuxで実施しました。Windows / macOSの実ブラウザーCI、外部利用者による試用、大規模な実環境構成の性能検証は未実施です。

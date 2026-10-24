@@ -92,7 +92,7 @@ infra-xray check plan.json  # 許可リストに基づく解析済みJSONを標�
 
 ## サンプルとテスト
 
-ローカル検証ではPython 55件・Vitest 6件とビルドが通過しました。実ブラウザーE2Eはこの環境のmacOSサンドボックス制限により起動できていません。詳しくは[検証記録](docs/validation.md)を参照してください。
+Python 55件・Vitest 6件・Playwright E2E 2件とビルドがGitHub Actions上で通過しています。パッケージのインストールとCLI起動も確認済みです。詳しくは[検証記録](docs/validation.md)を参照してください。
 
 ```bash
 python -m pip install pytest
