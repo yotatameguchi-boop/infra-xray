@@ -1,0 +1,56 @@
+name: Infra X-Ray Review
+description: Analyze a prepared Terraform plan without AWS credentials or write permissions
+inputs:
+  plan-path:
+    description: Path to a prepared Terraform plan JSON (never uploaded)
+    required: true
+  target:
+    description: Stable unique name of this plan within the PR
+    default: default
+  config-path:
+    description: Optional JSON config path
+    default: ''
+  baseline:
+    description: Find the previous compatible report for this PR and target
+    default: 'true'
+  read-token:
+    description: Read-only Actions token for baseline lookup
+    default: ${{ github.token }}
+  retention-days:
+    description: Report retention period (GitHub repository limits also apply)
+    default: '14'
+outputs:
+  artifact-name:
+    description: Artifact containing only sanitized reports
+    value: ${{ steps.analyze.outputs.artifact-name }}
+  exit-code:
+    description: Review result (0 passed, 1 policy failed; analysis errors fail before output)
+    value: ${{ steps.analyze.outputs.exit-code }}
+runs:
+  using: composite
+  steps:
+    - id: analyze
+      continue-on-error: true
+      shell: bash
+      env:
+        IX_PLAN: ${{ inputs.plan-path }}
+        IX_TARGET: ${{ inputs.target }}
+        IX_CONFIG: ${{ inputs.config-path }}
+        IX_BASELINE: ${{ inputs.baseline }}
+        IX_READ_TOKEN: ${{ inputs.read-token }}
+      run: python3 -I "$GITHUB_ACTION_PATH/entry.py" analyze
+    - name: Upload sanitized reports
+      if: always() && steps.analyze.outputs.report-dir != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ steps.analyze.outputs.artifact-name }}
+        path: ${{ steps.analyze.outputs.report-dir }}/report.*
+        retention-days: ${{ inputs.retention-days }}
+        if-no-files-found: error
+        overwrite: true
+    - name: Apply review policy
+      if: always()
+      shell: bash
+      env:
+        IX_EXIT: ${{ steps.analyze.outputs.exit-code || '2' }}
+      run: exit "$IX_EXIT"

@@ -128,3 +128,67 @@ describe("explorer interface", () => {
     expect(screen.queryByRole("tab")).toBeNull();
   });
 });
+
+describe("embedded review", () => {
+  it("loads the offline graph without fetching and displays history and suppression", async () => {
+    const data = document.createElement("script");
+    data.id = "infra-xray-review";
+    data.type = "application/json";
+    data.textContent = JSON.stringify({
+      schema_version: 1,
+      tool_version: "0.2.0",
+      target: "production",
+      commit: "a".repeat(40),
+      pr: 1,
+      run_id: 2,
+      analyzed_at: "2026-10-25",
+      config_fingerprint: "hash",
+      enabled_rules: ["DB-001"],
+      summary: {
+        findings: 0,
+        suppressed: 1,
+        unknown: 1,
+        ignored_resources: 0,
+        new: 0,
+      },
+      check: { status: "passed", exit_code: 0 },
+      comparison: {
+        status: "compared",
+        message: "前回比較",
+        baseline_commit: "b".repeat(40),
+      },
+      historical: [
+        {
+          key: "old",
+          resource: "missing",
+          id: "SG-001",
+          comparison: "Not evaluated",
+          reason: "評価できません",
+        },
+      ],
+      evaluations: [
+        {
+          key: "unknown",
+          resource: "aws_db_instance.primary",
+          id: "DB-001",
+          status: "unknown",
+          reason: "unknown属性",
+        },
+      ],
+      graph,
+    });
+    document.body.append(data);
+    try {
+      mount();
+      await screen.findByText("Review · production");
+      expect(fetch).not.toHaveBeenCalled();
+      fireEvent.click(
+        screen.getByText("前回レビューとの比較・判定不能・設定情報"),
+      );
+      expect(screen.getByText("Not evaluated · SG-001")).toBeTruthy();
+      expect(screen.getByText("unknown属性")).toBeTruthy();
+    } finally {
+      data.remove();
+    }
+  });
+});

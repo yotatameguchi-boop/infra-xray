@@ -33,7 +33,8 @@ import {
   CircleHelp,
   Terminal,
 } from "lucide-react";
-import type { Graph, Resource, Mode } from "./types";
+import { ReviewPanel } from "./ReviewPanel";
+import type { Graph, Resource, Mode, Review } from "./types";
 import { layout, labels } from "./graph";
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
@@ -95,6 +96,7 @@ function ResourceNode({
 const nodeTypes: NodeTypes = { resource: ResourceNode };
 export function App() {
   const [graph, setGraph] = useState<Graph | null>(null),
+    [review, setReview] = useState<Review | null>(null),
     [error, setError] = useState(""),
     [mode, setMode] = useState<Mode>("architecture"),
     [selected, setSelected] = useState<string | null>(null),
@@ -102,6 +104,18 @@ export function App() {
     [help, setHelp] = useState(false);
   const flow = useReactFlow();
   useEffect(() => {
+    const embedded = document.getElementById("infra-xray-review");
+    if (embedded) {
+      try {
+        const value = JSON.parse(embedded.textContent || "");
+        if (value.schema_version !== 1 || !value.graph) throw new Error();
+        setReview(value);
+        setGraph(value.graph);
+      } catch {
+        setError("レポートの形式を確認してください。");
+      }
+      return;
+    }
     const token = new URLSearchParams(location.hash.slice(1)).get("token");
     if (token) sessionStorage.setItem("infra-xray-token", token);
     history.replaceState(null, "", location.pathname);
@@ -198,7 +212,7 @@ export function App() {
         >
           <CircleHelp />
         </button>
-        <span className="version">0.1</span>
+        <span className="version">0.2</span>
       </aside>
       <div className="workspace">
         <header>
@@ -210,9 +224,11 @@ export function App() {
             <p>See what your infrastructure is becoming.</p>
           </div>
           <div className="environment">
-            <span className="status-dot" /> Local environment{" "}
+            <span className="status-dot" />{" "}
+            {review ? "Offline review" : "Local environment"}{" "}
             <span className="divider" />
-            <LockKeyhole size={13} /> Private by design
+            <LockKeyhole size={13} />{" "}
+            {review ? "Self-contained report" : "Private by design"}
           </div>
         </header>
         <section className="page-title">
@@ -271,11 +287,26 @@ export function App() {
           <div className="privacy-card">
             <LockKeyhole size={19} />
             <span>
-              データはこのマシンの中だけに
-              <small>LOCAL ANALYSIS · NO UPLOADS</small>
+              {review
+                ? "構成情報を含むレビュー結果"
+                : "データはこのマシンの中だけに"}
+              <small>
+                {review
+                  ? "OFFLINE REPORT · CHECK SHARING SCOPE"
+                  : "LOCAL ANALYSIS · NO UPLOADS"}
+              </small>
             </span>
           </div>
         </section>
+        {review && (
+          <ReviewPanel
+            review={review}
+            select={(id) => {
+              setQuery("");
+              select(id);
+            }}
+          />
+        )}
         <section className="explorer">
           <div className="toolbar">
             <div className="mode-tabs" role="tablist" aria-label="表示モード">
@@ -502,6 +533,14 @@ export function App() {
                         <small>判定根拠</small>
                         <p>{f.evidence}</p>
                         <small>{f.limitations}</small>
+                        {f.comparison && <p>比較: {f.comparison}</p>}
+                        {f.suppression && (
+                          <p className="limitation">
+                            {f.suppressed ? "抑制済み" : "抑制期限切れ"}:{" "}
+                            {f.suppression.reason} · {f.suppression.expires}{" "}
+                            (UTC)
+                          </p>
+                        )}
                       </div>
                     ))}
                     {!resource.findings.length && (
@@ -569,7 +608,10 @@ export function App() {
                 <span className="rule-id">{f.id}</span>
                 <span className="finding-title">
                   {f.title}
-                  <small>{f.resource}</small>
+                  <small>
+                    {f.resource} {f.comparison && `· ${f.comparison}`}{" "}
+                    {f.suppressed && "· Suppressed"}
+                  </small>
                 </span>
                 <span className="review-link">
                   Inspect resource <ArrowUpRight size={15} />
@@ -606,7 +648,7 @@ export function App() {
         )}
         <footer>
           <span>
-            <Activity size={13} /> INFRA X-RAY <b>v0.1.0</b>
+            <Activity size={13} /> INFRA X-RAY <b>v0.2.0</b>
           </span>
           <span>
             Evidence, not assumptions.<span className="footer-dot">·</span>{" "}

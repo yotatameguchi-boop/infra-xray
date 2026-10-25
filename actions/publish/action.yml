@@ -1,0 +1,33 @@
+name: Infra X-Ray Publish
+description: Opt-in PR comment publishing from a separate trusted job
+inputs:
+  report-path:
+    description: Sanitized report.json from the analysis job
+    required: true
+  target:
+    description: Expected stable analysis target
+    default: default
+  post-comment:
+    description: Explicitly opt in to posting/updating a PR comment
+    default: 'false'
+  include-details:
+    description: Include infrastructure identifiers and allowlisted values in the comment
+    default: 'false'
+  required:
+    description: Fail this step if publishing fails
+    default: 'false'
+  token:
+    description: GitHub Actions bot token, scoped to comment writes in this job only
+    default: ${{ github.token }}
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        IX_REPORT: ${{ inputs.report-path }}
+        IX_TARGET: ${{ inputs.target }}
+        IX_POST_COMMENT: ${{ inputs.post-comment }}
+        IX_COMMENT_DETAILS: ${{ inputs.include-details }}
+        IX_PUBLISH_REQUIRED: ${{ inputs.required }}
+        IX_WRITE_TOKEN: ${{ inputs.token }}
+      run: python3 -I "$GITHUB_ACTION_PATH/../review/entry.py" publish

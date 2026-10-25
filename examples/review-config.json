@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "enabled_rules": ["SG-001", "DB-001", "OPS-001"],
+  "fail_on_rules": [],
+  "fail_on_severities": [],
+  "only_new": false,
+  "fail_on_unknown": false,
+  "suppressions": [],
+  "max_input_bytes": 52428800,
+  "max_output_bytes": 10485760
+}

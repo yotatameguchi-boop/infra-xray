@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="infra-xray",
-    version="0.1.0",
+    version="0.2.0",
     description="Local, evidence-based Terraform plan explorer",
     packages=find_packages(include=["infra_xray", "infra_xray.*"]),
     package_data={"infra_xray": ["static/*", "static/assets/*"]},

@@ -16,3 +16,14 @@ React UIはGraphを読み取り、DagreでレイアウトしReact Flowで描画�
 - [React Flow documentation](https://reactflow.dev/learn)
 
 互換性のあるformat_version 1.x minorは受け入れ、未知の項目は無視します。未対応のmajorとactionは拒否します。
+
+
+## v0.2 review boundary
+
+`adapters.py`が入力変換の境界、`review.py`が共通結果・評価状態・比較・抑制・ポリシー、`reports.py`が表示形式、`review_cli.py`が非対話CLI、`github.py`がAPIと履歴・コメント調停、`ci.py`がActions環境の薄い連携層です。
+
+既存parserのgraph形式は変更しません。レビューJSONは別にschema_version=1を持ち、グラフと診断に安定した識別子を加えます。過去の診断文章・設定値は比較時に転送せず、必要な識別情報だけ読み取ります。
+
+HTMLはビルド済みReact UIとサニタイズ済み結果をインライン化します。JSONはscript終端等をエスケープし、CSPでネットワークアクセスと任意スクリプトを禁止します。React UIは埋め込み結果がある場合にAPIへ接続しません。
+
+GitHub解析Actionはコードを実行せず準備済みplanを解析し、投稿Actionは別権限ジョブで実行します。例のworkflowでは投稿をrepository variableで明示的に有効化するまで実行しません。利用者のTerraform生成ジョブのセキュリティは利用者側の責務です。

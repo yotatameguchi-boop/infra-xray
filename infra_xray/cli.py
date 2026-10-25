@@ -61,7 +61,11 @@ def main(argv=None):
     view.add_argument("--no-open", action="store_true")
     check = sub.add_parser("check", help="許可リストで抽出した解析結果をJSON出力")
     check.add_argument("plan")
+    from .review_cli import add_review_command, run_review
+    add_review_command(sub)
     args = parser.parse_args(argv)
+    if args.command == "review":
+        return run_review(args)
     try:
         graph = load_plan(args.plan)
         if args.command == "check":
