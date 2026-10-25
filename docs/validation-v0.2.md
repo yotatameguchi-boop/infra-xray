@@ -14,13 +14,14 @@
 
 ## GitHub Actionsで通過した項目
 
-初回実行: [テスト・ビルド](https://github.com/yotatameguchi-boop/infra-xray/actions/runs/40157444319) / [複数plan解析](https://github.com/yotatameguchi-boop/infra-xray/actions/runs/40157444327)。初回CIはPython 100件、Vitest 7件、Playwright 3件で通過。追加した異常レポート境界のテストを含む最終結果はPRチェックを参照。
+最終実装の実行: [テスト・ビルド](https://github.com/yotatameguchi-boop/infra-xray/actions/runs/40157569891) / [複数plan解析・前回比較](https://github.com/yotatameguchi-boop/infra-xray/actions/runs/40157569974)。Python 101件、Vitest 7件、Playwright 3件で通過。
 
 - Linux / Python 3.12 / Node.js 22の全テストとwheel / sdist / ZIPビルド。
 - 既存のブラウザーE2E 2件と、オフラインHTMLの実ブラウザーテスト1件。
 - 自己完結HTMLをfile URLで開き、ネットワーク無効でもグラフ・詳細・検索が動くこと。
 - 悪意あるscript終端・img・イベント属性を含む入力が実行されず、機密カナリアがHTMLに含まれないこと。
 - 2つの人工planを同一PRで解析するActionsの実例。
+- 2回目の実行で前回のartifactを自動取得し、両targetで比較成立。synthetic-awsの3件がすべてExisting、新規0件となることを実際のreport.jsonで確認。
 
 PRコメントのAPI処理はモックで検証します。このリポジトリでは投稿を初期設定で無効に保ちます。外部利用者のリポジトリや実AWS環境での確認、Windows / macOSの実ブラウザーCIは対象外です。
 
