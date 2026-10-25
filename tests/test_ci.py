@@ -55,3 +55,12 @@ def test_baseline_permission_failure_continues(environment,monkeypatch):
     assert ci.main(['analyze'])==0
     report=json.loads((Path(outputs(env['GITHUB_OUTPUT'])['report-dir'])/'report.json').read_text())
     assert report['comparison']['status']=='unavailable'
+
+def test_malformed_publication_never_prints_input_or_traceback(environment,monkeypatch,capsys):
+    root,_=environment
+    from test_review import review
+    report=review(target='production');report['check']=['CANARY']
+    path=root/'malformed.json';path.write_text(json.dumps(report))
+    monkeypatch.setenv('IX_POST_COMMENT','true');monkeypatch.setenv('IX_PUBLISH_REQUIRED','true');monkeypatch.setenv('IX_REPORT',str(path))
+    assert ci.main(['publish'])==2
+    captured=capsys.readouterr();assert 'CANARY' not in captured.err and 'Traceback' not in captured.err

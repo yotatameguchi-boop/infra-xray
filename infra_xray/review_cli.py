@@ -58,6 +58,6 @@ def run_review(args):
         return report['check']['exit_code']
     except (ReviewError, PlanError) as error:
         print('エラー: ' + str(error), file=sys.stderr)
-    except (OSError, ValueError, TypeError, KeyError, RecursionError):
+    except Exception:  # CLI boundary: never print input-bearing tracebacks.
         print('エラー: レビューを完了できません。入力・設定・出力先を確認してください。', file=sys.stderr)
     return 2

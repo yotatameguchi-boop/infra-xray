@@ -52,7 +52,7 @@ def analyze_action():
             try:
                 baseline, state = find_baseline(GitHub(repo, token), pr, run_id, target, report['rules_fingerprint'])
                 notice = state == 'unavailable'
-            except (ReviewError, OSError, ValueError, KeyError, TypeError):
+            except Exception:  # Untrusted integration data must not escape in tracebacks.
                 notice = True
         else:
             notice = True
@@ -124,7 +124,7 @@ def publish_action():
                                  enabled=True, details=enabled('IX_COMMENT_DETAILS'))
         print('コメント結果: ' + result)
         return 0
-    except (ReviewError, OSError, ValueError, KeyError, TypeError):
+    except Exception:  # Untrusted integration data must not escape in tracebacks.
         # Do not echo third-party API bodies, tokens, file paths or input values.
         print('コメント連携に失敗しました。権限・対象SHA・レポート形式を確認してください。レポートは保持されています。', file=sys.stderr)
         return 2 if required else 0
@@ -137,7 +137,7 @@ def main(argv=None):
             return analyze_action()
         if argv == ['publish']:
             return publish_action()
-    except (ReviewError, OSError, ValueError, KeyError, TypeError, RecursionError):
+    except Exception:  # Top-level CI boundary; errors are fixed, non-sensitive text.
         print('解析エラー: plan・設定・実行コンテキストを確認してください。', file=sys.stderr)
         return 2
     print('analyze または publishを指定してください。', file=sys.stderr)

@@ -104,7 +104,7 @@ class GitHub:
                 if len(matches) != 1 or matches[0].file_size > 10*1024*1024:
                     raise GitHubError('artifactのレポート形式・サイズが不正です。')
                 return json.loads(archive.read(matches[0]))
-        except (ValueError, zipfile.BadZipFile, KeyError):
+        except (ValueError, zipfile.BadZipFile, KeyError, RuntimeError, NotImplementedError):
             raise GitHubError('artifactのレポートを読み込めません。') from None
 
 def artifact_name(target):

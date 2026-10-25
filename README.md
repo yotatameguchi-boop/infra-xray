@@ -30,6 +30,8 @@ CI連携ではサニタイズ済み結果をGitHubへ保存します。ローカ
 
 ## スクリーンショット
 
+![オフラインの変更レビューと診断詳細](docs/screenshots/review.png)
+
 ![人工planの構成・変更・確認事項を表示するInfra X-Ray](docs/screenshots/desktop.png)
 
 スクリーンショットは同梱の人工planを使い、Playwrightで実際の画面から生成しています。
