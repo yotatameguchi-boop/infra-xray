@@ -4,7 +4,29 @@
 
 [![CI](https://github.com/yotatameguchi-boop/infra-xray/actions/workflows/test.yml/badge.svg)](https://github.com/yotatameguchi-boop/infra-xray/actions/workflows/test.yml)
 
-Terraform 1.x の plan JSON をローカルで解析し、構成・変更・確認すべきセキュリティ設定を可視化する OSS の v0.1 実装です。AWSへの接続やインフラの変更は行いません。
+Terraform 1.x の plan JSON をローカルで解析し、構成・変更・確認すべきセキュリティ設定を可視化する OSS の v0.2 実装です。AWSへの接続やインフラの変更は行いません。
+
+## v0.2：日常の変更レビュー
+
+PRごとに、変更サマリー・確認事項・判定不能・前回との差分をレビューできます。
+
+```bash
+infra-xray review plan.json --format html --output report.html
+infra-xray review plan.json --format json --output report.json --target production
+infra-xray review plan.json --baseline previous-report.json \
+  --config examples/review-config.json --format markdown --output report.md
+```
+
+HTMLはネットワーク接続なしでグラフ・詳細を操作できます。元のplanは含めません。GitHub Actionsでは読み取り専用解析とartifact保存を行い、PRコメントは別ジョブで明示的に有効化した場合のみ投稿します。初期コメントには属性値やリソースアドレスを載せません。
+
+- 前回比較：New / Existing / Resolved / Not evaluated。unknown・対象消失・ルール無効化を解消と誤判定しません。
+- ポリシー：失敗対象ルール・重要度、新規のみ、判定不能を設定可能。初期状態では警告だけでCIを失敗させません。
+- 抑制：完全一致アドレス・理由・有効期限が必須。抑制した診断も残します。
+- 複数plan：安定したtarget名ごとに結果・履歴・コメントを分離。
+
+**[導入・設定・Actions連携の完全な手順](docs/review.md)** · [実行例のworkflow](.github/workflows/review-example.yml)
+
+CI連携ではサニタイズ済み結果をGitHubへ保存します。ローカルCLIの利用とはデータの保存先が異なります。構成情報の公開範囲を確認してください。
 
 ## スクリーンショット
 
@@ -14,7 +36,7 @@ Terraform 1.x の plan JSON をローカルで解析し、構成・変更・確�
 
 ## ビルド済みパッケージで起動
 
-[GitHub Releases](https://github.com/yotatameguchi-boop/infra-xray/releases)から `infra-xray-0.1.0.zip` をダウンロード・展開してください。wheel単体とソース配布物、SHA256SUMSも公開しています。
+[GitHub Releases](https://github.com/yotatameguchi-boop/infra-xray/releases)から `infra-xray-0.2.0.zip` をダウンロード・展開してください。wheel単体とソース配布物、SHA256SUMSも公開しています。
 
 同梱のwheelを使う場合はPython 3.9以上だけで起動できます。Node.jsや外部パッケージの取得は不要です。
 
@@ -22,7 +44,7 @@ Terraform 1.x の plan JSON をローカルで解析し、構成・変更・確�
 cd infra-xray
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install --no-index dist/infra_xray-0.1.0-py3-none-any.whl
+python -m pip install --no-index dist/infra_xray-0.2.0-py3-none-any.whl
 infra-xray view examples/synthetic-plans/review.json
 ```
 
@@ -92,7 +114,7 @@ infra-xray check plan.json  # 許可リストに基づく解析済みJSONを標�
 
 ## サンプルとテスト
 
-Python 55件・Vitest 6件・Playwright E2E 2件とビルドがGitHub Actions上で通過しています。パッケージのインストールとCLI起動も確認済みです。詳しくは[検証記録](docs/validation.md)を参照してください。
+v0.2ではレビュー・比較・抑制・GitHub連携・オフラインHTMLのテストを追加しています。最新の実行結果はCIバッジと[検証記録](docs/validation-v0.2.md)を参照してください。
 
 ```bash
 python -m pip install pytest
@@ -126,10 +148,10 @@ Python側は依存を減らすため標準ライブラリで検証していま�
 
 セキュリティ監査や実際のネットワーク到達性検査ではありません。線はTerraformの参照関係であり、通信経路ではありません。IAM・NACL・ルートテーブル・バックアップ・IPv6は評価しません。
 
-`count` / `for_each` の曖昧なインスタンス展開、module出力・変数経由の関係、`depends_on` は推測せず省略します。正確なアドレスに直接解決できる参照のみ対応します。対応外リソースは描画しません。大規模構成の折りたたみは未実装です。Windows / Linuxでの実機検証は今後の対象です。
+`count` / `for_each` の曖昧なインスタンス展開、module出力・変数経由の関係、`depends_on` は推測せず省略します。正確なアドレスに直接解決できる参照のみ対応します。対応外リソースは描画しません。大規模構成の折りたたみは未実装です。LinuxのChromiumはCIで検証し、Windows / macOSの実ブラウザー検証は今後の対象です。
 
 sensitiveフラグを尊重し、password・user_data・tags・outputs・variables等を除外します。Terraformアドレスと許可リスト属性は表示対象なので、これらに機密情報を埋め込まないでください。許可リストは任意の値の機密性を自動判別する仕組みではありません。
 
-[設計](docs/architecture.md) · [セキュリティ](docs/security.md) · [元の要件](docs/requirements.md) · [検証結果](docs/validation.md)
+[設計](docs/architecture.md) · [セキュリティ](docs/security.md) · [元の要件](docs/requirements.md) · [v0.2検証結果](docs/validation-v0.2.md)
 
 [MIT License](LICENSE) · [脆弱性の報告](SECURITY.md) · [開発に参加する](CONTRIBUTING.md) · [変更履歴](CHANGELOG.md) · [GitHub Actions](https://github.com/yotatameguchi-boop/infra-xray/actions)

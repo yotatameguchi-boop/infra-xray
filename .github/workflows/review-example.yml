@@ -1,0 +1,74 @@
+name: Review example (synthetic plans)
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: synthetic-aws
+            plan: examples/synthetic-plans/review.json
+          - target: synthetic-safe
+            plan: examples/synthetic-plans/safe.json
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # Only artificial plans. Real Terraform generation belongs to the caller's CI.
+      - uses: ./actions/review
+        with:
+          plan-path: ${{ matrix.plan }}
+          target: ${{ matrix.target }}
+  publish:
+    needs: review
+    if: >-
+      always() && github.event_name == 'pull_request' &&
+      vars.INFRA_XRAY_POST_COMMENTS == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [synthetic-aws, synthetic-safe]
+    concurrency:
+      group: infra-xray-comment-${{ github.repository }}-${{ github.event.pull_request.number }}-${{ matrix.target }}
+      cancel-in-progress: false
+    steps:
+      # Trusted base only: do not execute PR code in a write-enabled job.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - id: identity
+        env:
+          IX_TARGET: ${{ matrix.target }}
+        run: |
+          python3 -c 'import hashlib,os; name="infra-xray-review-"+hashlib.sha256(os.environ["IX_TARGET"].encode()).hexdigest()[:20]; open(os.environ["GITHUB_OUTPUT"],"a").write("name="+name+"\n")'
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.identity.outputs.name }}
+          path: downloaded-review
+      - uses: ./actions/publish
+        with:
+          report-path: downloaded-review/report.json
+          target: ${{ matrix.target }}
+          post-comment: 'true'
+          required: 'true'

@@ -6,6 +6,24 @@
 
 変更はありません。
 
+## 0.2.0 — 2026-10-25
+
+### Added
+
+- 非対話のreview CLI、バージョン付きJSON結果、Markdownと自己完結HTML。
+- コミット・PR・run・設定の識別情報、評価済み／非該当／判定不能／対象外の記録。
+- 前回とのNew / Existing / Resolved / Not evaluated比較。比較不能時はUncompared。
+- 失敗条件の設定、期限と理由付き抑制、期限切れの診断復帰。
+- 読み取り専用の解析Action、複数targetのartifact・履歴取得。
+- 別ジョブのオプトインPRコメント更新、SHA確認、Botコメント識別、情報の省略。
+- オフラインHTMLのXSS・機密情報保護・外部通信なしのテスト。
+
+### Compatibility and scope
+
+- 既存のview / checkのCLI・終了コード・JSON形式を維持。
+- コメント投稿は初期状態で無効。CI利用時の保存先と権限を明示。
+- GitHub.comの標準Actions Botを対象とし、SaaS・課金・GitHub App・他IaCへの対応は対象外。
+
 ## 0.1.0 — 2026-10-24
 
 ### Added
